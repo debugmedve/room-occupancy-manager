@@ -1,0 +1,8 @@
+server:
+  servlet:
+    context-path: /rom
+
+management.endpoints.web.exposure.include: '*'
+
+rom:
+  environment: PRODUCTION
