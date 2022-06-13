@@ -22,5 +22,5 @@ public class RoomRequest implements Serializable {
 
     @NotNull
     @Size(min = 1)
-    private BigDecimal[] prices;
+    private BigDecimal[] guests;
 }
