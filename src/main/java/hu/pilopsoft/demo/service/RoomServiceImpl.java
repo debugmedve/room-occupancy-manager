@@ -61,14 +61,17 @@ public class RoomServiceImpl implements RoomService {
     private void populateEconomyResult(final Deque<Guest> economyGuests, final int economyRoomCount, final int premiumRoomCount, final RoomResponse result) {
         var total = BigDecimal.ZERO;
         result.setEconomyUsage(0);
-        final var guestIterator = economyGuests.descendingIterator();
+        final var economyGuestSize = economyGuests.size();
+        final var premiumRemaining = premiumRoomCount - result.getPremiumUsage();
+        final var economyGuestIteratorDesc = economyGuests.descendingIterator();
 
-        if (premiumRoomCount != result.getPremiumUsage()) {
-            populateRemainingPremiumWithEconomyGuests(premiumRoomCount, result, guestIterator);
+        if (economyGuestSize > economyRoomCount && premiumRemaining > 0) {
+            final var economyGuestRemaining = economyGuestSize - economyRoomCount;
+            populateRemainingPremiumWithEconomyGuests(Math.min(premiumRemaining, economyGuestRemaining), result, economyGuestIteratorDesc);
         }
 
-        for(int i = 0; i < economyRoomCount && guestIterator.hasNext(); ++i) {
-            final var guest = guestIterator.next();
+        for(int i = 0; i < economyRoomCount && economyGuestIteratorDesc.hasNext(); ++i) {
+            final var guest = economyGuestIteratorDesc.next();
             total = total.add(guest.getPrice());
             result.setEconomyUsage(result.getEconomyUsage() + 1);
         }
@@ -77,15 +80,14 @@ public class RoomServiceImpl implements RoomService {
 
     }
 
-    private void populateRemainingPremiumWithEconomyGuests(int premiumRoomCount, RoomResponse result, Iterator<Guest> guestIterator) {
-        final var remainingCount = premiumRoomCount - result.getPremiumUsage();
+    private void populateRemainingPremiumWithEconomyGuests(final int count, final RoomResponse result, final Iterator<Guest> guestIterator) {
         final DequeList<Guest> remainingGuests = new DequeListImpl<>();
 
-        for (int i = 0; i < remainingCount && guestIterator.hasNext(); ++i) {
+        for (int i = 0; i < count && guestIterator.hasNext(); ++i) {
             remainingGuests.add(guestIterator.next());
         }
 
-        populatePremiumResult(remainingGuests, remainingCount, result);
+        populatePremiumResult(remainingGuests, count, result);
     }
 
     private void populatePremiumResult(final Deque<Guest> premiumGuests, final int premiumRoomCount, final RoomResponse result) {
@@ -95,10 +97,10 @@ public class RoomServiceImpl implements RoomService {
             result.setPremiumUsage(0);
         }
 
-        final var guestIterator = premiumGuests.descendingIterator();
+        final var guestIteratorDesc = premiumGuests.descendingIterator();
 
-        for(int i = 0; i < premiumRoomCount && guestIterator.hasNext(); ++i) {
-            final var guest = guestIterator.next();
+        for(int i = 0; i < premiumRoomCount && guestIteratorDesc.hasNext(); ++i) {
+            final var guest = guestIteratorDesc.next();
             total = total.add(guest.getPrice());
             result.setPremiumUsage(result.getPremiumUsage()+1);
         }
