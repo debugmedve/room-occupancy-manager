@@ -8,19 +8,22 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(classes = RoomServiceImpl.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
+@ActiveProfiles("test")
 class RoomServiceTest {
 
-    private static final BigDecimal[] DEFAULT_GUESTS = new BigDecimal[]{
+    private static final List<BigDecimal> DEFAULT_GUESTS = List.of(
             BigDecimal.valueOf(23),
             BigDecimal.valueOf(45),
             BigDecimal.valueOf(155),
@@ -31,7 +34,7 @@ class RoomServiceTest {
             BigDecimal.valueOf(101),
             BigDecimal.valueOf(115),
             BigDecimal.valueOf(209)
-    };
+    );
 
 
     @Autowired
@@ -44,12 +47,23 @@ class RoomServiceTest {
         assertResult(result, expectedRoomResponse);
     }
 
+    /**
+     * TODO:: in the {@code CodingChallengeBE_v2.pdf}  there are 2 mistakes.
+     * <p>
+     * Test2: we have to upgrade 99.99 economy guest to premium room (almost) as in Test4
+     * Test4: the .99 is in the wrong total profit, because it is the promoted guest with 99.99
+     *
+     * @return arugments
+     */
     public static Stream<Arguments> testRoomServiceCalculateMethodSource() {
         return Stream.of(
                 Arguments.of(createRoomRequest(3, 3), createRoomResponse(3, BigDecimal.valueOf(738), 3, BigDecimal.valueOf(167.99))),
-                Arguments.of(createRoomRequest(7, 5), createRoomResponse(6, BigDecimal.valueOf(1054), 4, BigDecimal.valueOf(189.99))),
-                Arguments.of(createRoomRequest(2, 7), createRoomResponse(2, BigDecimal.valueOf(583), 4, BigDecimal.valueOf(189.99))),
-                Arguments.of(createRoomRequest(7, 1), createRoomResponse(7, BigDecimal.valueOf(1153), 1, BigDecimal.valueOf(45.99)))
+                Arguments.of(createRoomRequest(5, 7), createRoomResponse(7, BigDecimal.valueOf(1153.99), 3, BigDecimal.valueOf(90))), // TEST2
+                Arguments.of(createRoomRequest(7, 2), createRoomResponse(2, BigDecimal.valueOf(583), 4, BigDecimal.valueOf(189.99))),
+                Arguments.of(createRoomRequest(1, 7), createRoomResponse(7, BigDecimal.valueOf(1153.99), 1, BigDecimal.valueOf(45))), // TEST4
+                Arguments.of(createRoomRequest(2, 2, List.of(BigDecimal.valueOf(60), BigDecimal.valueOf(40), BigDecimal.valueOf(10), BigDecimal.valueOf(9.99))), createRoomResponse(2, BigDecimal.valueOf(100), 2, BigDecimal.valueOf(19.99))),
+                Arguments.of(createRoomRequest(2, 5, List.of(BigDecimal.valueOf(60), BigDecimal.valueOf(40), BigDecimal.valueOf(10), BigDecimal.valueOf(9.99))), createRoomResponse(4, BigDecimal.valueOf(119.99), 0, BigDecimal.ZERO)),
+                Arguments.of(createRoomRequest(2, 2, List.of(BigDecimal.valueOf(100), BigDecimal.valueOf(101), BigDecimal.valueOf(102))), createRoomResponse(2, BigDecimal.valueOf(203), 0, BigDecimal.ZERO))
         );
     }
 
@@ -73,7 +87,7 @@ class RoomServiceTest {
         return createRoomRequest(economyCount, premiumCount, DEFAULT_GUESTS);
     }
 
-    private static RoomRequest createRoomRequest(final Integer economyCount, final Integer premiumCount, final BigDecimal[] guests) {
+    private static RoomRequest createRoomRequest(final Integer economyCount, final Integer premiumCount, final List<BigDecimal> guests) {
         final var result = new RoomRequest();
         result.setEconomyRoomCount(economyCount);
         result.setPremiumRoomCount(premiumCount);
