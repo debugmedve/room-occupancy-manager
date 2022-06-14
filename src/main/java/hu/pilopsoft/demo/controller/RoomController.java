@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/room")
+@RequestMapping("/room/v0")
 public class RoomController {
 
     @Autowired
     private RoomService roomService;
 
-    @PostMapping(value = "/", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = { MediaType.APPLICATION_JSON_VALUE })
-    public RoomResponse postRoom(@RequestBody @Validated RoomRequest request) {
+    @PostMapping(value = "/calculate", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = { MediaType.APPLICATION_JSON_VALUE })
+    public RoomResponse postCalculateRooms(@RequestBody @Validated RoomRequest request) {
         return roomService.calculate(request);
     }
 
